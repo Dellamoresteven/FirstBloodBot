@@ -1,0 +1,75 @@
+group 'deploy'
+version '1.0-SNAPSHOT'
+
+apply plugin: 'java'
+apply plugin: 'application'
+apply plugin: 'com.github.johnrengelman.shadow'
+
+sourceCompatibility = 1.8
+
+mainClassName = 'bot.Inhouse'
+
+allprojects {
+    repositories {
+        maven { url 'https://jitpack.io' }
+    }
+}
+
+repositories {
+    mavenCentral()
+    jcenter()
+}
+
+dependencies {
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+    compile 'net.dv8tion:JDA:3.5.0_327'
+    runtime 'org.slf4j:slf4j-simple:1.7.25'
+    compileClasspath "com.github.jengelman.gradle.plugins:shadow:2.0.4"
+    compile 'com.github.taycaldwell:riot-api-java:4.0.1'
+    compile 'com.jagrosh:JDA-Utilities:1.9'
+    compile 'com.opencsv:opencsv:4.0'
+    compile 'com.cloudinary:cloudinary-http44:1.17.0'
+}
+
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath 'com.github.jengelman.gradle.plugins:shadow:2.0.4'
+        classpath 'org.hidetake:gradle-ssh-plugin:2.9.0'
+    }
+}
+
+apply plugin: 'org.hidetake.ssh'
+
+
+shadowJar {
+    baseName = 'bot'
+    classifier = null
+    version = null
+}
+
+apply plugin: 'org.hidetake.ssh'
+
+remotes {
+    server {
+        host = '167.99.154.45'
+        user = 'root'
+        password = 'luisshoealbert1'
+    }
+}
+
+ssh.settings {
+    knownHosts = allowAnyHosts
+}
+
+task deploy {
+    doLast {
+        ssh.run {
+            session(remotes.server) {
+                    put from: file('build/libs/bot.jar'), into: 'bot.jar'
+            }
+        }
+    }
+}
